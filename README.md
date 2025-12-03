@@ -187,31 +187,22 @@ Hệ thống xử lý các nghiệp vụ phức tạp bằng cơ chế sự ki�
 1.  **Clone repository:**
 
     ```bash
-    git clone [https://github.com/PhucHungNhanba/CNPM_SGU.git](https://github.com/PhucHungNhanba/CNPM_SGU.git)
+    [git clone [https://github.com/PhucHungNhanba/CNPM_SGU.git](https://github.com/PhucHungNhanba/CNPM_SGU.git)](https://github.com/nhuvuong2828/FoodfastDeliverry)
     cd CNPM_SGU
     ```
 
-2.  **Cấu hình biến môi trường:**
-    Trong thư mục của mỗi microservice, sao chép file `application.yml.example` thành `application.yml` và điền các thông tin cần thiết (Database URL, Kafka Broker, JWT Secret...).
 
-3.  **Chạy bằng Docker Compose (Khuyến khích):**
+2.  **Chạy bằng Docker Compose (Khuyến khích):**
     *Khởi chạy hạ tầng (Kafka, Zookeeper, PostgreSQL, Grafana...)*
 
-    ```bash
-<<<<<<< HEAD
+  
     docker-compose up -d
-    ```
+    
 
-4.  **Chạy các Microservices (Local):**
-    Mở Terminal cho từng service và chạy:
 
-    ```bash
-    ./mvnw spring-boot:run
-=======
-    docker-compose up --build
-    ```
+   
 
-4.  **Chạy Frontend:**
+3.  **Chạy Frontend:**
     Mở Terminal cho thư mục foodfast-frontend và chạy:
 
     ```bash
@@ -219,7 +210,7 @@ Hệ thống xử lý các nghiệp vụ phức tạp bằng cơ chế sự ki�
 >>>>>>> 702f4c43a690c7ba1b75875c37cc7d34d40b6345
     ```
 
-5.  **Dừng hệ thống:**
+4.  **Dừng hệ thống:**
 
     ```bash
     docker-compose down
