@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\branch-service",
+    "\\foodfast-frontend",
+    "\\foodfast-frontend\\src",
+    "\\foodfast-frontend\\src\\pages",
+    "\\foodfast-frontend\\src\\pages\\admin",
+    "\\user-service",
+    "\\user-service\\src",
+    "\\user-service\\src\\controllers",
+    "\\user-service\\src\\routes"
+  ],
+  "SelectedNode": "\\branch-service\\server.js",
+  "PreviewInSolutionExplorer": false
+}
