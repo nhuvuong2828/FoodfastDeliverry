@@ -187,7 +187,7 @@ Hệ thống xử lý các nghiệp vụ phức tạp bằng cơ chế sự ki�
 1.  **Clone repository:**
 
     ```bash
-    [[git clone https://github.com/nhuvuong2828/FoodfastDeliverry
+    git clone https://github.com/nhuvuong2828/FoodfastDeliverry
     cd FoodfastDeliverry
     ```
 
