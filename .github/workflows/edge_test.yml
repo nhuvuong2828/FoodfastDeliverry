@@ -1,22 +1,41 @@
-﻿name: Edge Browser Test
+﻿name: React E2E Test
 
-on: [push]
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  test-edge:
-    runs-on: ubuntu-latest # Hoặc windows-latest nếu muốn test môi trường Windows thực
+  build-and-test:
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    
+    # 1. Lấy code về
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Cài đặt Node.js
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        
-    - name: Install dependencies
-      run: npm install selenium-webdriver mocha chai
+        cache: 'npm'
 
-    - name: Run Edge Test
-      # Lưu ý: Code JS phải có options '--headless' và '--no-sandbox'
-      run: node tests/test_edge.js
+    # 3. Cài đặt dependencies
+    - name: Install Dependencies
+      run: npm install
+
+    # 4. QUAN TRỌNG: Chạy Server + Đợi cổng 3000 + Chạy Test
+    - name: Start Server and Run Tests
+      run: |
+        # Dấu & ở cuối nghĩa là chạy lệnh này ẩn ở chế độ nền (background)
+        npm start &
+
+        # Đợi cho đến khi localhost:3000 phản hồi (timeout sau 60s)
+        npx wait-on http://localhost:3000 --timeout 60000
+
+        # Sau khi server đã lên, mới bắt đầu chạy test
+        npm test
+      env:
+        CI: true # Bắt buộc với React để tránh lỗi dừng chờ nhập phím
