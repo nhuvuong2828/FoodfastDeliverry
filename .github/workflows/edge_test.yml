@@ -1,41 +1,46 @@
-﻿name: React E2E Test
+﻿name: FoodFast Frontend E2E
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  test-frontend:
     runs-on: ubuntu-latest
+    
+    # QUAN TRỌNG: Thiết lập thư mục làm việc mặc định là folder chứa code React
+    defaults:
+      run:
+        working-directory: ./foodfast-frontend
 
     steps:
-    # 1. Lấy code về
-    - name: Checkout code
+    - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 2. Cài đặt Node.js
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
+        # Chỉ định đường dẫn file package-lock.json để cache hoạt động đúng
+        cache-dependency-path: foodfast-frontend/package-lock.json
 
-    # 3. Cài đặt dependencies
     - name: Install Dependencies
-      run: npm install
-
-    # 4. QUAN TRỌNG: Chạy Server + Đợi cổng 3000 + Chạy Test
-    - name: Start Server and Run Tests
+      # Lệnh này sẽ tự động chạy trong folder foodfast-frontend
       run: |
-        # Dấu & ở cuối nghĩa là chạy lệnh này ẩn ở chế độ nền (background)
+        npm install
+        # Cài thêm các thư viện test nếu chưa có trong package.json
+        npm install selenium-webdriver mocha wait-on --save-dev
+
+    - name: Start App and Run Tests
+      run: |
+        # 1. Bật React App ở chế độ nền (&)
         npm start &
-
-        # Đợi cho đến khi localhost:3000 phản hồi (timeout sau 60s)
-        npx wait-on http://localhost:3000 --timeout 60000
-
-        # Sau khi server đã lên, mới bắt đầu chạy test
-        npm test
+        
+        # 2. Chờ cổng 3000 mở (Timeout 120s cho chắc chắn)
+        npx wait-on http://localhost:3000 --timeout 120000
+        
+        # 3. Chạy lệnh test mà ta đã khai báo ở Bước 2
+        npm run test:e2e
       env:
-        CI: true # Bắt buộc với React để tránh lỗi dừng chờ nhập phím
+        CI: true
