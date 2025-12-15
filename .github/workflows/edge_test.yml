@@ -1,0 +1,22 @@
+﻿name: Edge Browser Test
+
+on: [push]
+
+jobs:
+  test-edge:
+    runs-on: ubuntu-latest # Hoặc windows-latest nếu muốn test môi trường Windows thực
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm install selenium-webdriver mocha chai
+
+    - name: Run Edge Test
+      # Lưu ý: Code JS phải có options '--headless' và '--no-sandbox'
+      run: node tests/test_edge.js
