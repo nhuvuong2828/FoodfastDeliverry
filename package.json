@@ -11,8 +11,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "mocha tests/*.spec.js --timeout 30000",
-    "eject": "react-scripts eject"
+    "test:e2e": "mocha tests/*.spec.js --timeout 30000" 
   },
   "devDependencies": {
     "mocha": "^10.2.0",
