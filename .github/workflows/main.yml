@@ -1,0 +1,45 @@
+﻿name: FoodFast Frontend E2E
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-frontend:
+    runs-on: ubuntu-latest
+    
+    # QUAN TRỌNG: Chỉ định thư mục làm việc là foodfast-frontend
+    defaults:
+      run:
+        working-directory: ./foodfast-frontend
+
+    steps:
+    # 1. Lấy code về
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 2. Cài đặt Node.js (Phiên bản 20 để chạy được Vite)
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20' 
+        cache: 'npm'
+        cache-dependency-path: foodfast-frontend/package-lock.json
+
+    # 3. Cài đặt thư viện
+    - name: Install Dependencies
+      run: npm install
+
+    # 4. Chạy Server và Test
+    - name: Start App and Run Tests
+      run: |
+        # Chạy Vite server ở background (&)
+        npm start &
+        
+        # Chờ cổng 3000 mở (Timeout 60s)
+        npx wait-on http://localhost:3000 --timeout 60000
+        
+        # Chạy bài test Selenium
+        npm run test:e2e
