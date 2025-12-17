@@ -62,3 +62,29 @@ jobs:
     - name: Teardown
       if: always()
       run: docker compose down
+      # 5. Chạy Test và Xuất Báo Cáo
+    - name: Run Tests and Generate Report
+      run: |
+        cd foodfast-frontend
+        
+        # Cài đặt (đảm bảo có mochawesome)
+        npm ci 
+        
+        # Bật Server
+        npm start &
+        npx wait-on http://localhost:5173 --timeout 180000
+        
+        # CHẠY LỆNH XUẤT BÁO CÁO (Thay vì npm run test:e2e)
+        npm run test:report
+      
+      # Quan trọng: Kể cả test fail thì vẫn xuất báo cáo
+      continue-on-error: true 
+
+    # 6. Upload báo cáo để bạn tải về
+    - name: Upload Test Report
+      if: always() # Luôn chạy dù test pass hay fail
+      uses: actions/upload-artifact@v4
+      with:
+        name: html-test-report
+        path: foodfast-frontend/test-results/
+        retention-days: 5
