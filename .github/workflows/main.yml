@@ -36,31 +36,26 @@ jobs:
         cache: 'npm'
         cache-dependency-path: foodfast-frontend/package-lock.json
 
-    # 4. Cài đặt thư viện Frontend
-    - name: Install Frontend Dependencies
-      run: |
-        cd foodfast-frontend
-        npm start &
-        # SỬA CỔNG THÀNH 5173
-        npx wait-on http://localhost:5173 --timeout 60000 
-        npm run test:e2e
-
-    # 5. Chạy Server Frontend và Test
-    - name: Start Frontend and Run Tests
-      # Lưu ý: Cần set biến môi trường API URL trỏ vào localhost của Docker
+    - name: Install, Start and Test Frontend
       env:
-        # Giả sử API Gateway của bạn chạy cổng 8080 (hãy sửa nếu khác)
         VITE_API_BASE_URL: http://localhost:8080
+        CI: true
       run: |
         cd foodfast-frontend
         
-        # Bật Vite server ở background
+        # Dùng npm ci thay vì npm install (npm ci giúp cài chính xác theo package-lock.json, tốt hơn cho CI)
+        npm ci
+        
+        # Kiểm tra xem vite đã có chưa (để debug)
+        ls -la node_modules/.bin/vite || echo "Vite not found in bin!"
+        
+        # Bật server (Cổng 5173)
         npm start &
         
-        # Chờ cổng 3000 (Frontend) mở
-        npx wait-on http://localhost:3000 --timeout 60000
+        # Chờ server lên
+        npx wait-on http://localhost:5173 --timeout 60000
         
-        # Chạy test (Lúc này API đã sống để Login/Search thật)
+        # Chạy test
         npm run test:e2e
     
     # 6. Tắt Docker sau khi xong (Optional)
