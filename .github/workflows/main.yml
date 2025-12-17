@@ -1,4 +1,4 @@
-﻿name: FoodFast Frontend E2E
+﻿name: FoodFast Full E2E Test
 
 on:
   push:
@@ -7,20 +7,28 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test-frontend:
+  test-full-system:
     runs-on: ubuntu-latest
     
-    # QUAN TRỌNG: Chỉ định thư mục làm việc là foodfast-frontend
-    defaults:
-      run:
-        working-directory: ./foodfast-frontend
-
     steps:
-    # 1. Lấy code về
+    # 1. Lấy toàn bộ code về (Cả Frontend và Backend)
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 2. Cài đặt Node.js (Phiên bản 20 để chạy được Vite)
+    # 2. Bật Backend bằng Docker Compose (QUAN TRỌNG)
+    - name: Start Backend Services
+      run: |
+        # Dựng toàn bộ backend và database ở chế độ nền (-d)
+        docker compose up -d
+        
+        # Xem thử các container đã lên chưa (để debug nếu lỗi)
+        docker ps -a
+        
+        # Chờ 60 giây để Backend khởi động xong (Java/Database khởi động hơi lâu)
+        echo "⏳ Waiting for Backend to be ready..."
+        sleep 60
+
+    # 3. Cài đặt Node.js cho Frontend
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -28,18 +36,31 @@ jobs:
         cache: 'npm'
         cache-dependency-path: foodfast-frontend/package-lock.json
 
-    # 3. Cài đặt thư viện
-    - name: Install Dependencies
-      run: npm install
-
-    # 4. Chạy Server và Test
-    - name: Start App and Run Tests
+    # 4. Cài đặt thư viện Frontend
+    - name: Install Frontend Dependencies
       run: |
-        # Chạy Vite server ở background (&)
+        cd foodfast-frontend
+        npm install
+
+    # 5. Chạy Server Frontend và Test
+    - name: Start Frontend and Run Tests
+      # Lưu ý: Cần set biến môi trường API URL trỏ vào localhost của Docker
+      env:
+        # Giả sử API Gateway của bạn chạy cổng 8080 (hãy sửa nếu khác)
+        VITE_API_BASE_URL: http://localhost:8080
+      run: |
+        cd foodfast-frontend
+        
+        # Bật Vite server ở background
         npm start &
         
-        # Chờ cổng 3000 mở (Timeout 60s)
+        # Chờ cổng 3000 (Frontend) mở
         npx wait-on http://localhost:3000 --timeout 60000
         
-        # Chạy bài test Selenium
+        # Chạy test (Lúc này API đã sống để Login/Search thật)
         npm run test:e2e
+    
+    # 6. Tắt Docker sau khi xong (Optional)
+    - name: Teardown
+      if: always()
+      run: docker compose down
