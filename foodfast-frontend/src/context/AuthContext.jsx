@@ -1,18 +1,14 @@
 ﻿// src/context/AuthContext.jsx
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState } from 'react';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [userInfo, setUserInfo] = useState(null);
-
-    useEffect(() => {
-        // Kiểm tra xem có thông tin người dùng trong localStorage không khi app khởi động
-        const storedUserInfo = localStorage.getItem('userInfo');
-        if (storedUserInfo) {
-            setUserInfo(JSON.parse(storedUserInfo));
-        }
-    }, []);
+    // Khởi tạo từ localStorage để F5 không mất đăng nhập
+    const [userInfo, setUserInfo] = useState(() => {
+        const localData = localStorage.getItem('userInfo');
+        return localData ? JSON.parse(localData) : null;
+    });
 
     const login = (data) => {
         setUserInfo(data);
