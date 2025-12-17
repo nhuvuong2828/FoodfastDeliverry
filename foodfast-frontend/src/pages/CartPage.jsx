@@ -1,4 +1,4 @@
-﻿import React, { useContext, useState, useEffect } from 'react'; // Nhớ import useEffect
+﻿import React, { useContext, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 
@@ -9,11 +9,10 @@ export default function CartPage() {
     // Lấy ghi chú cũ nếu có
     const [orderNote, setOrderNote] = useState(localStorage.getItem('orderNote') || '');
 
-    // --- FIX LỖI: Tự động lưu ghi chú ngay khi gõ ---
+    // Tự động lưu ghi chú
     useEffect(() => {
         localStorage.setItem('orderNote', orderNote);
     }, [orderNote]);
-    // -----------------------------------------------
 
     const updateQty = (item, newQty) => {
         let qty = parseInt(newQty);
@@ -28,7 +27,6 @@ export default function CartPage() {
     const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
     const checkoutHandler = () => {
-        // Không cần setItem ở đây nữa vì useEffect đã làm rồi
         navigate('/shipping');
     };
 
@@ -57,28 +55,43 @@ export default function CartPage() {
                             </div>
                             <div className="divide-y divide-gray-100">
                                 {cartItems.map((item) => (
-                                    <div key={item.product} className="p-4 flex flex-col md:grid md:grid-cols-12 gap-4 items-center hover:bg-gray-50 transition-colors">
+                                    <div key={item.product} className="cart-item p-4 flex flex-col md:grid md:grid-cols-12 gap-4 items-center hover:bg-gray-50 transition-colors">
                                         <div className="col-span-6 flex items-center w-full">
                                             <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
                                                 <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=No+Image'; }} />
                                             </div>
                                             <div className="ml-4 flex-grow">
-                                                <Link to={`/product/${item.product}`} className="text-lg font-bold text-gray-800 hover:text-indigo-600 line-clamp-1">{item.name}</Link>
+                                                <Link to={`/product/${item.product}`} className="text-lg font-bold text-gray-800 hover:text-indigo-600 line-clamp-1">
+                                                    {item.name}
+                                                </Link>
                                                 {item.selectedOptions?.length > 0 && (
                                                     <div className="text-xs text-gray-500 mt-1">{item.selectedOptions.map(opt => `+ ${opt.name}`).join(', ')}</div>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="col-span-2 text-center font-semibold text-gray-700">{item.price.toLocaleString('vi-VN')} ₫</div>
+                                        <div className="col-span-2 text-center font-semibold text-gray-700">
+                                            {item.price.toLocaleString('vi-VN')} ₫
+                                        </div>
                                         <div className="col-span-3 flex justify-center">
                                             <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                                                 <button onClick={() => updateQty(item, item.quantity - 1)} className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold border-r disabled:opacity-50" disabled={item.quantity <= 1}>-</button>
-                                                <input type="number" min="1" value={item.quantity} onChange={(e) => updateQty(item, e.target.value)} className="w-16 text-center py-2 focus:outline-none font-semibold text-gray-700" />
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    value={item.quantity}
+                                                    onChange={(e) => updateQty(item, e.target.value)}
+                                                    className="w-16 text-center py-2 focus:outline-none font-semibold text-gray-700 qty-input" // Thêm class qty-input
+                                                />
                                                 <button onClick={() => updateQty(item, item.quantity + 1)} className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold border-l">+</button>
                                             </div>
                                         </div>
                                         <div className="col-span-1 text-center mt-2 md:mt-0">
-                                            <button onClick={() => removeFromCart(item.product)} className="text-gray-400 hover:text-red-500 p-2"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                                            <button
+                                                onClick={() => removeFromCart(item.product)}
+                                                className="text-gray-400 hover:text-red-500 p-2 btn-remove-item" // Thêm class btn-remove-item
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -101,6 +114,7 @@ export default function CartPage() {
                             <div className="mb-6">
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Ghi chú cho nhà hàng / Shipper:</label>
                                 <textarea
+                                    id="order-note" // Thêm ID
                                     value={orderNote}
                                     onChange={(e) => setOrderNote(e.target.value)}
                                     className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -115,9 +129,15 @@ export default function CartPage() {
                             </div>
                             <div className="flex justify-between items-center border-t border-dashed border-gray-200 pt-4 mb-6">
                                 <span className="font-bold text-lg text-gray-800">Tổng cộng</span>
-                                <span className="font-bold text-2xl text-indigo-600">{totalPrice.toLocaleString('vi-VN')} ₫</span>
+                                <span className="font-bold text-2xl text-indigo-600" id="cart-total">{totalPrice.toLocaleString('vi-VN')} ₫</span> {/* Thêm ID */}
                             </div>
-                            <button onClick={checkoutHandler} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-md hover:bg-indigo-700 transition">Tiến hành đặt hàng</button>
+                            <button
+                                onClick={checkoutHandler}
+                                id="btn-checkout" // <--- QUAN TRỌNG: ID cho Selenium click
+                                className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-md hover:bg-indigo-700 transition"
+                            >
+                                Tiến hành đặt hàng
+                            </button>
                         </div>
                     </div>
                 </div>
