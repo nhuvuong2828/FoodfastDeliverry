@@ -34,37 +34,42 @@ jobs:
       run: |
         cd foodfast-frontend
         
-        # 1. Cài đặt thư viện
-        npm ci
+        # --- BƯỚC SỬA LỖI TỰ ĐỘNG ---
+        echo "🔧 Fixing package.json encoding..."
+        # Lệnh này sẽ tìm và xóa ký tự BOM ở đầu file (nguyên nhân gây lỗi ERR_MOCHA_UNPARSABLE_FILE)
+        sed -i '1s/^\xEF\xBB\xBF//' package.json
+        # ----------------------------
         
-        # 2. Cài lại mochawesome (Bắt buộc để tạo báo cáo)
+        # Dùng npm install để an toàn hơn khi file package.json vừa bị sửa
+        npm install
+        
+        # Cài mochawesome
         npm install mochawesome --save-dev
         
-        # 3. Bật Server
+        # Bật Server
         npm start &
         npx wait-on http://localhost:5173 --timeout 60000
         
-        # 4. CHẠY TEST TRỰC TIẾP (Không qua package.json để tránh lỗi script)
-        # Lệnh này ép buộc tạo folder "my-report" chứa kết quả
+        # CHẠY TEST VÀ XUẤT BÁO CÁO
         echo "🚀 Running tests..."
         npx mocha tests/*.spec.js --timeout 60000 --reporter mochawesome --reporter-options reportDir=my-report,reportFilename=index
       
       continue-on-error: true
 
-    # Debug: Liệt kê file xem có folder my-report không
+    # Debug: Kiểm tra xem file báo cáo có chưa
     - name: Debug - List Report Files
       if: always()
       run: |
-        echo "📂 Checking for report files..."
-        ls -R foodfast-frontend/my-report/ || echo "❌ KHÔNG TÌM THẤY FOLDER BÁO CÁO!"
+        echo "📂 Checking report files..."
+        ls -R foodfast-frontend/my-report/ || echo "❌ VẪN CHƯA CÓ FILE BÁO CÁO!"
 
-    # 5. Upload folder "my-report"
+    # Upload báo cáo
     - name: Upload Test Report
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: HTML-Test-Report
-        path: foodfast-frontend/my-report/  # Đường dẫn khớp với lệnh npx mocha ở trên
+        path: foodfast-frontend/my-report/
         retention-days: 5
 
     - name: Teardown
