@@ -11,24 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    # 1. Lấy toàn bộ code về (Cả Frontend và Backend)
+    # 1. Lấy toàn bộ code về
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 2. Bật Backend bằng Docker Compose (QUAN TRỌNG)
+    # 2. Bật Backend (Docker Compose)
     - name: Start Backend Services
       run: |
-        # Dựng toàn bộ backend và database ở chế độ nền (-d)
         docker compose up -d
-        
-        # Xem thử các container đã lên chưa (để debug nếu lỗi)
         docker ps -a
-        
-        # Chờ 60 giây để Backend khởi động xong (Java/Database khởi động hơi lâu)
-        echo "⏳ Waiting for Backend to be ready..."
-        sleep 60
+        echo "⏳ Waiting for Backend to be ready (180s)..."
+        # Tăng thời gian chờ lên 180s để chắc chắn Backend khởi động xong
+        sleep 180
 
-    # 3. Cài đặt Node.js cho Frontend
+    # 3. Cài đặt Node.js
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -36,55 +32,51 @@ jobs:
         cache: 'npm'
         cache-dependency-path: foodfast-frontend/package-lock.json
 
-    - name: Install, Start and Test Frontend
+    # 4. Cài đặt, Chạy Server và Test (GỘP LẠI 1 BƯỚC DUY NHẤT)
+    - name: Install, Start and Run Test Report
       env:
+        # Trỏ API về Backend Docker
         VITE_API_BASE_URL: http://localhost:8080
         CI: true
       run: |
         cd foodfast-frontend
         
-        # Dùng npm ci thay vì npm install (npm ci giúp cài chính xác theo package-lock.json, tốt hơn cho CI)
+        # Cài đặt dependencies
         npm ci
         
-        # Kiểm tra xem vite đã có chưa (để debug)
-        ls -la node_modules/.bin/vite || echo "Vite not found in bin!"
+        # Cài thêm mochawesome phòng trường hợp package.json thiếu
+        npm install mochawesome --save-dev
         
-        # Bật server (Cổng 5173)
+        # Bật Vite server (chạy ngầm)
         npm start &
         
-        # Chờ server lên
+        # Chờ Frontend lên ở cổng 5173
         npx wait-on http://localhost:5173 --timeout 60000
         
-        # Chạy test
-        npm run test:e2e
-    
-    # 6. Tắt Docker sau khi xong (Optional)
-    - name: Teardown
-      if: always()
-      run: docker compose down
-      # 5. Chạy Test và Xuất Báo Cáo
-    - name: Run Tests and Generate Report
-      run: |
-        cd foodfast-frontend
-        
-        # Cài đặt (đảm bảo có mochawesome)
-        npm ci 
-        
-        # Bật Server
-        npm start &
-        npx wait-on http://localhost:5173 --timeout 180000
-        
-        # CHẠY LỆNH XUẤT BÁO CÁO (Thay vì npm run test:e2e)
+        # Chạy test và xuất báo cáo (Dùng lệnh test:report)
+        echo "🚀 Starting E2E Tests with Report..."
         npm run test:report
       
-      # Quan trọng: Kể cả test fail thì vẫn xuất báo cáo
-      continue-on-error: true 
+      # Quan trọng: Kể cả test fail thì vẫn chạy tiếp để lấy báo cáo
+      continue-on-error: true
 
-    # 6. Upload báo cáo để bạn tải về
+    # 5. Debug: Kiểm tra xem file báo cáo có được tạo ra không?
+    - name: Debug - List Report Files
+      if: always()
+      run: |
+        echo "📂 Checking test-results directory:"
+        ls -R foodfast-frontend/test-results/ || echo "❌ Report directory not found!"
+
+    # 6. Upload báo cáo (Artifacts)
     - name: Upload Test Report
-      if: always() # Luôn chạy dù test pass hay fail
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: html-test-report
         path: foodfast-frontend/test-results/
         retention-days: 5
+
+    # 7. Tắt Docker sau khi hoàn tất mọi thứ
+    - name: Teardown
+      if: always()
+      run: docker compose down
