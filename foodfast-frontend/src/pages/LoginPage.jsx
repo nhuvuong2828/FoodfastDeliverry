@@ -9,7 +9,7 @@ const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false); // Thêm state loading
+    const [loading, setLoading] = useState(false);
 
     const { userInfo, login } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -18,13 +18,12 @@ const LoginPage = () => {
     const redirectInUrl = new URLSearchParams(search).get('redirect');
     const redirect = redirectInUrl ? redirectInUrl : '/';
 
-    // 1. XỬ LÝ NẾU ĐÃ ĐĂNG NHẬP SẴN (Vào lại trang login khi đã có session)
     useEffect(() => {
         if (userInfo) {
             if (userInfo.isAdmin) {
-                navigate('/admin/orderlist'); // Admin về trang quản lý
+                navigate('/admin/orderlist');
             } else {
-                navigate(redirect); // User thường về trang chủ/trang trước đó
+                navigate(redirect);
             }
         }
     }, [navigate, userInfo, redirect]);
@@ -32,17 +31,14 @@ const LoginPage = () => {
     const submitHandler = async (e) => {
         e.preventDefault();
         setError(null);
-        setLoading(true); // Bắt đầu loading
+        setLoading(true);
 
         try {
             const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-
             const { data } = await axios.post(`${API_URL}/api/users/login`, { email, password });
 
-            // Lưu thông tin vào Context
             login(data);
 
-            // 2. XỬ LÝ CHUYỂN HƯỚNG NGAY SAU KHI LOGIN THÀNH CÔNG
             if (data.isAdmin) {
                 console.log("👨‍💼 Admin logged in -> Chuyển đến trang Quản lý");
                 navigate("./admin/orderlist");
@@ -54,7 +50,7 @@ const LoginPage = () => {
         } catch (err) {
             setError(err.response?.data?.message || 'Email hoặc mật khẩu không hợp lệ.');
         } finally {
-            setLoading(false); // Tắt loading
+            setLoading(false);
         }
     };
 
@@ -74,12 +70,13 @@ const LoginPage = () => {
 
                 <form onSubmit={submitHandler} className="space-y-6">
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                        {/* Cập nhật htmlFor khớp với id mới */}
+                        <label htmlFor="email-input" className="block text-sm font-medium text-gray-700">
                             Địa chỉ Email
                         </label>
                         <input
                             type="email"
-                            id="email"
+                            id="email-input" // <--- ĐÃ SỬA: id khớp với test Selenium
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -88,12 +85,13 @@ const LoginPage = () => {
                         />
                     </div>
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                        {/* Cập nhật htmlFor khớp với id mới */}
+                        <label htmlFor="password-input" className="block text-sm font-medium text-gray-700">
                             Mật khẩu
                         </label>
                         <input
                             type="password"
-                            id="password"
+                            id="password-input" // <--- ĐÃ SỬA: id khớp với test Selenium
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -104,6 +102,7 @@ const LoginPage = () => {
 
                     <button
                         type="submit"
+                        id="login-btn" // <--- ĐÃ THÊM: id khớp với test Selenium
                         disabled={loading}
                         className="w-full py-3 px-4 font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-md hover:shadow-lg flex justify-center items-center disabled:opacity-70"
                     >
@@ -132,4 +131,4 @@ const LoginPage = () => {
     );
 };
 
-export default LoginPage;   
+export default LoginPage;
