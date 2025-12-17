@@ -1,6 +1,7 @@
 ﻿// src/context/AuthContext.jsx
 import React, { createContext, useState } from 'react';
-// ⚠️ TUYỆT ĐỐI KHÔNG import App ở đây!
+
+// ⚠️ TUYỆT ĐỐI KHÔNG ĐƯỢC CÓ DÒNG NÀY: import App from '../App'; 
 
 export const AuthContext = createContext();
 
