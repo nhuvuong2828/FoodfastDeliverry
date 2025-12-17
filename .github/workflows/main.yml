@@ -40,7 +40,10 @@ jobs:
     - name: Install Frontend Dependencies
       run: |
         cd foodfast-frontend
-        npm install
+        npm start &
+        # SỬA CỔNG THÀNH 5173
+        npx wait-on http://localhost:5173 --timeout 60000 
+        npm run test:e2e
 
     # 5. Chạy Server Frontend và Test
     - name: Start Frontend and Run Tests
