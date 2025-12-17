@@ -11,20 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    # 1. Lấy toàn bộ code về
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # 2. Bật Backend (Docker Compose)
     - name: Start Backend Services
       run: |
         docker compose up -d
-        docker ps -a
         echo "⏳ Waiting for Backend to be ready (180s)..."
-        # Tăng thời gian chờ lên 180s để chắc chắn Backend khởi động xong
         sleep 180
 
-    # 3. Cài đặt Node.js
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -32,51 +27,46 @@ jobs:
         cache: 'npm'
         cache-dependency-path: foodfast-frontend/package-lock.json
 
-    # 4. Cài đặt, Chạy Server và Test (GỘP LẠI 1 BƯỚC DUY NHẤT)
-    - name: Install, Start and Run Test Report
+    - name: Install, Start and Run Test
       env:
-        # Trỏ API về Backend Docker
         VITE_API_BASE_URL: http://localhost:8080
         CI: true
       run: |
         cd foodfast-frontend
         
-        # Cài đặt dependencies
+        # 1. Cài đặt thư viện
         npm ci
         
-        # Cài thêm mochawesome phòng trường hợp package.json thiếu
+        # 2. Cài lại mochawesome (Bắt buộc để tạo báo cáo)
         npm install mochawesome --save-dev
         
-        # Bật Vite server (chạy ngầm)
+        # 3. Bật Server
         npm start &
-        
-        # Chờ Frontend lên ở cổng 5173
         npx wait-on http://localhost:5173 --timeout 60000
         
-        # Chạy test và xuất báo cáo (Dùng lệnh test:report)
-        echo "🚀 Starting E2E Tests with Report..."
-        npm run test:report
+        # 4. CHẠY TEST TRỰC TIẾP (Không qua package.json để tránh lỗi script)
+        # Lệnh này ép buộc tạo folder "my-report" chứa kết quả
+        echo "🚀 Running tests..."
+        npx mocha tests/*.spec.js --timeout 60000 --reporter mochawesome --reporter-options reportDir=my-report,reportFilename=index
       
-      # Quan trọng: Kể cả test fail thì vẫn chạy tiếp để lấy báo cáo
       continue-on-error: true
 
-    # 5. Debug: Kiểm tra xem file báo cáo có được tạo ra không?
+    # Debug: Liệt kê file xem có folder my-report không
     - name: Debug - List Report Files
       if: always()
       run: |
-        echo "📂 Checking test-results directory:"
-        ls -R foodfast-frontend/test-results/ || echo "❌ Report directory not found!"
+        echo "📂 Checking for report files..."
+        ls -R foodfast-frontend/my-report/ || echo "❌ KHÔNG TÌM THẤY FOLDER BÁO CÁO!"
 
-    # 6. Upload báo cáo (Artifacts)
+    # 5. Upload folder "my-report"
     - name: Upload Test Report
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: html-test-report
-        path: foodfast-frontend/test-results/
+        name: HTML-Test-Report
+        path: foodfast-frontend/my-report/  # Đường dẫn khớp với lệnh npx mocha ở trên
         retention-days: 5
 
-    # 7. Tắt Docker sau khi hoàn tất mọi thứ
     - name: Teardown
       if: always()
       run: docker compose down
